@@ -1,26 +1,183 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #070708;
+  --foreground: #F8FAFC;
+  --card: #0E0E12;
+  --card-foreground: #F8FAFC;
+  /* Vega brand gradient: Blue #72B4FF → Pink #E91E8C */
+  --vega-blue: #72B4FF;
+  --vega-pink: #E91E8C;
+  --vega-purple: #A66DDB;
+  --primary: #E91E8C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #12141C;
+  --secondary-foreground: #A66DDB;
+  --muted: #111216;
+  --muted-foreground: #64748B;
+  --accent: #72B4FF;
+  --accent-foreground: #FFFFFF;
+  --border: #1E2230;
+  --ring: #A66DDB;
+  --radius: 1rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-vega-blue: var(--vega-blue);
+  --color-vega-pink: var(--vega-pink);
+  --color-vega-purple: var(--vega-purple);
+
+  --font-sans: var(--font-sans, 'Outfit', system-ui, sans-serif);
+  --font-arabic: var(--font-arabic, 'Cairo', sans-serif);
+
+  --animate-noise: noise 0.2s infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+
+  html {
+    scroll-behavior: auto; /* Required for Lenis */
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Arabic typography */
+  [lang="ar"], .font-arabic {
+    font-family: var(--font-arabic);
+    letter-spacing: 0;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4 {
+    font-family: var(--font-arabic);
+    font-weight: 700;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #070708; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #72B4FF, #E91E8C);
+  border-radius: 3px;
+}
+
+/* Background Noise Overlay */
+.noise-overlay {
+  position: fixed;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  width: 200%; height: 200%;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  animation: noise-anim 0.5s steps(10) infinite;
+}
+
+@keyframes noise-anim {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-5%, -5%); }
+  20%  { transform: translate(-10%, 5%); }
+  30%  { transform: translate(5%, -10%); }
+  40%  { transform: translate(-5%, 15%); }
+  50%  { transform: translate(-15%, -5%); }
+  60%  { transform: translate(15%, 5%); }
+  70%  { transform: translate(-5%, 10%); }
+  80%  { transform: translate(10%, 5%); }
+  90%  { transform: translate(5%, -5%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* Reveal */
+.char-reveal {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+/* Marquee */
+@keyframes marquee {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 25s linear infinite; }
+
+/* Vega Gradient Text */
+.vega-gradient {
+  background: linear-gradient(135deg, #72B4FF 0%, #A66DDB 50%, #E91E8C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Vega Gradient Border Button */
+.vega-btn {
+  position: relative;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.vega-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 1px;
+  background: linear-gradient(135deg, #72B4FF, #E91E8C);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(14, 14, 18, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(166, 109, 219, 0.18);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Vega glow effect */
+.vega-glow {
+  box-shadow: 0 0 40px rgba(166, 109, 219, 0.15), 0 0 80px rgba(114, 180, 255, 0.08);
 }
