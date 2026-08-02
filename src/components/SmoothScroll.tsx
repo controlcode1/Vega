@@ -13,13 +13,11 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     // Register GSAP ScrollTrigger
     gsap.registerPlugin(ScrollTrigger);
 
-    // Detect touch device (mobile/tablet)
-    const isTouchDevice = 
-      'ontouchstart' in window || 
-      navigator.maxTouchPoints > 0 || 
-      window.matchMedia('(pointer: coarse)').matches;
+    // Only bypass Lenis on mobile/tablet screens (< 1024px)
+    // Touchscreen laptops/desktops have width >= 1024px and should keep smooth scrolling
+    const isMobileScreen = window.innerWidth < 1024;
 
-    if (isTouchDevice) {
+    if (isMobileScreen) {
       // Bypass Lenis on mobile to allow native, hardware-accelerated momentum scrolling
       ScrollTrigger.refresh();
       return;

@@ -17,14 +17,13 @@ export default function ScrollVideoBackground() {
   // ── 1. Detect if it's a mobile/touch device ──────────────────────────────────
   useEffect(() => {
     const checkMobile = () => {
-      const isTouch = 
-        'ontouchstart' in window || 
-        navigator.maxTouchPoints > 0 || 
-        window.matchMedia('(pointer: coarse)').matches;
-      const isSmallScreen = window.innerWidth < 768;
-      setIsMobile(isTouch || isSmallScreen);
+      // Only treat as mobile if screen width is less than 1024px (phones and tablets)
+      // Touchscreen laptops have width >= 1024px and should get the full desktop experience
+      setIsMobile(window.innerWidth < 1024);
     };
     checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // ── 2. Preload frames (all for desktop, only 1 for mobile) ───────────────────
