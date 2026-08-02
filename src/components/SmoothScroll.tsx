@@ -13,7 +13,19 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     // Register GSAP ScrollTrigger
     gsap.registerPlugin(ScrollTrigger);
 
-    // Initialize Lenis
+    // Detect touch device (mobile/tablet)
+    const isTouchDevice = 
+      'ontouchstart' in window || 
+      navigator.maxTouchPoints > 0 || 
+      window.matchMedia('(pointer: coarse)').matches;
+
+    if (isTouchDevice) {
+      // Bypass Lenis on mobile to allow native, hardware-accelerated momentum scrolling
+      ScrollTrigger.refresh();
+      return;
+    }
+
+    // Initialize Lenis (only on desktop)
     const lenis = new Lenis({
       duration: 1.4,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
