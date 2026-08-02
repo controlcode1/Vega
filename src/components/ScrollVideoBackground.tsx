@@ -11,56 +11,29 @@ export default function ScrollVideoBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const frameRef = useRef({ frame: 0 });
-  const [isMobile, setIsMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // ── 1. Detect if it's a mobile/touch device ──────────────────────────────────
-  useEffect(() => {
-    const checkMobile = () => {
-      // Only treat as mobile if screen width is less than 1024px (phones and tablets)
-      // Touchscreen laptops have width >= 1024px and should get the full desktop experience
-      setIsMobile(window.innerWidth < 1024);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ── 2. Preload frames (all for desktop, only 1 for mobile) ───────────────────
+  // ── 1. Preload all frames ──────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    if (isMobile) {
-      // Mobile optimization: Only load a single poster frame to save bandwidth and memory
+    let settled = 0;
+    const onSettle = () => {
+      settled++;
+      if (settled === TOTAL_FRAMES) setIsLoaded(true);
+    };
+
+    for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.src = '/frames/frame_0000.webp';
-      img.onload = () => {
-        imagesRef.current[0] = img;
-        setIsLoaded(true);
-      };
-      img.onerror = () => {
-        setIsLoaded(true); // fallback so loader disappears
-      };
-    } else {
-      // Desktop: Load all frames for smooth scroll-triggered video
-      let settled = 0;
-      const onSettle = () => {
-        settled++;
-        if (settled === TOTAL_FRAMES) setIsLoaded(true);
-      };
-
-      for (let i = 0; i < TOTAL_FRAMES; i++) {
-        const img = new Image();
-        const idx = String(i).padStart(4, '0');
-        img.src = `/frames/frame_${idx}.webp`;
-        img.onload = onSettle;
-        img.onerror = onSettle;
-        imagesRef.current[i] = img;
-      }
+      const idx = String(i).padStart(4, '0');
+      img.src = `/frames/frame_${idx}.webp`;
+      img.onload = onSettle;
+      img.onerror = onSettle;
+      imagesRef.current[i] = img;
     }
-  }, [isMobile]);
+  }, []);
 
-  // ── 3. Set up GSAP ScrollTrigger once frames are ready (desktop only) ────────
+  // ── 2. Set up GSAP ScrollTrigger once frames are ready ───────────────────────
   useEffect(() => {
     if (!isLoaded || !canvasRef.current) return;
 
@@ -70,7 +43,7 @@ export default function ScrollVideoBackground() {
 
     // Object-cover draw — fills canvas while preserving aspect ratio
     const drawFrame = (index: number) => {
-      const img = imagesRef.current[isMobile ? 0 : index];
+      const img = imagesRef.current[index];
       if (!img?.width) return;
 
       const cw = canvas.width;
@@ -86,18 +59,11 @@ export default function ScrollVideoBackground() {
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      drawFrame(isMobile ? 0 : Math.floor(frameRef.current.frame));
+      drawFrame(Math.floor(frameRef.current.frame));
     };
 
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
-
-    // If mobile, do not initialize GSAP scroll timeline (no need to update frames)
-    if (isMobile) {
-      return () => {
-        window.removeEventListener('resize', resizeCanvas);
-      };
-    }
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -126,7 +92,7 @@ export default function ScrollVideoBackground() {
       tl.scrollTrigger?.kill();
       tl.kill();
     };
-  }, [isLoaded, isMobile]);
+  }, [isLoaded]);
 
   return (
     <div
