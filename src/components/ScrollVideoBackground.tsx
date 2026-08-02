@@ -12,25 +12,36 @@ export default function ScrollVideoBackground() {
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const frameRef = useRef({ frame: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [frameStep, setFrameStep] = useState(1);
 
-  // ── 1. Preload all frames ──────────────────────────────────────────────────
+  // ── 1. Calculate frame step and preload frames ───────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // Mobile/tablet gets 1/3 of the frames (108 frames) to save 67% memory & bandwidth
+    const isMobile = window.innerWidth < 1024;
+    const step = isMobile ? 3 : 1;
+    setFrameStep(step);
+
+    const framesToLoad: number[] = [];
+    for (let i = 0; i < TOTAL_FRAMES; i += step) {
+      framesToLoad.push(i);
+    }
 
     let settled = 0;
     const onSettle = () => {
       settled++;
-      if (settled === TOTAL_FRAMES) setIsLoaded(true);
+      if (settled === framesToLoad.length) setIsLoaded(true);
     };
 
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
+    framesToLoad.forEach((i) => {
       const img = new Image();
       const idx = String(i).padStart(4, '0');
       img.src = `/frames/frame_${idx}.webp`;
       img.onload = onSettle;
       img.onerror = onSettle;
       imagesRef.current[i] = img;
-    }
+    });
   }, []);
 
   // ── 2. Set up GSAP ScrollTrigger once frames are ready ───────────────────────
@@ -41,9 +52,14 @@ export default function ScrollVideoBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const isMobile = window.innerWidth < 1024;
+
     // Object-cover draw — fills canvas while preserving aspect ratio
     const drawFrame = (index: number) => {
-      const img = imagesRef.current[index];
+      // Find the closest preloaded frame index based on step
+      const rawIndex = Math.round(index / frameStep) * frameStep;
+      const actualIndex = Math.max(0, Math.min(TOTAL_FRAMES - 1, rawIndex));
+      const img = imagesRef.current[actualIndex];
       if (!img?.width) return;
 
       const cw = canvas.width;
@@ -57,8 +73,10 @@ export default function ScrollVideoBackground() {
     };
 
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      // Mobile optimization: Render at 60% resolution stretched via CSS to boost GPU fillrate
+      const scale = isMobile ? 0.6 : 1.0;
+      canvas.width = window.innerWidth * scale;
+      canvas.height = window.innerHeight * scale;
       drawFrame(Math.floor(frameRef.current.frame));
     };
 
@@ -75,7 +93,8 @@ export default function ScrollVideoBackground() {
         trigger: 'body',
         start: 'top top',
         end: () => `+=${document.documentElement.scrollHeight - window.innerHeight}`,
-        scrub: 1.5,
+        // Faster scrub on mobile (0.3s) for responsive feel; desktop keeps cinematic 1.5s delay
+        scrub: isMobile ? 0.3 : 1.5,
         invalidateOnRefresh: true,
       },
       onUpdate: () => {
@@ -92,7 +111,7 @@ export default function ScrollVideoBackground() {
       tl.scrollTrigger?.kill();
       tl.kill();
     };
-  }, [isLoaded]);
+  }, [isLoaded, frameStep]);
 
   return (
     <div
