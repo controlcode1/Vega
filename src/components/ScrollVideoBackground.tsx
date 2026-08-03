@@ -38,7 +38,17 @@ export default function ScrollVideoBackground() {
       const img = new Image();
       const idx = String(i).padStart(4, '0');
       img.src = `/frames/frame_${idx}.webp`;
-      img.onload = onSettle;
+      img.onload = () => {
+        // Asynchronously decode the image in a background thread
+        // to prevent main thread blocking (jank/lag) during drawImage
+        if (typeof img.decode === 'function') {
+          img.decode()
+            .then(onSettle)
+            .catch(onSettle);
+        } else {
+          onSettle();
+        }
+      };
       img.onerror = onSettle;
       imagesRef.current[i] = img;
     });
@@ -53,12 +63,13 @@ export default function ScrollVideoBackground() {
     if (!ctx) return;
 
     const isMobile = window.innerWidth < 1024;
+    const maxPreloadedIndex = Math.floor((TOTAL_FRAMES - 1) / frameStep) * frameStep;
 
     // Object-cover draw — fills canvas while preserving aspect ratio
     const drawFrame = (index: number) => {
       // Find the closest preloaded frame index based on step
       const rawIndex = Math.round(index / frameStep) * frameStep;
-      const actualIndex = Math.max(0, Math.min(TOTAL_FRAMES - 1, rawIndex));
+      const actualIndex = Math.max(0, Math.min(maxPreloadedIndex, rawIndex));
       const img = imagesRef.current[actualIndex];
       if (!img?.width) return;
 
@@ -72,11 +83,30 @@ export default function ScrollVideoBackground() {
       ctx.drawImage(img, (cw - nw) / 2, (ch - nh) / 2, nw, nh);
     };
 
+    // Tracking size to avoid resizing during mobile scrolling
+    // (mobile scrolling triggers resize events because of URL bar showing/hiding)
+    let lastWidth = 0;
+    let lastHeight = 0;
+
     const resizeCanvas = () => {
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+
+      // Only resize if the width changed, or height changed significantly (> 150px)
+      const widthChanged = currentWidth !== lastWidth;
+      const heightChanged = Math.abs(currentHeight - lastHeight) > 150;
+
+      if (!widthChanged && !heightChanged) {
+        return;
+      }
+
+      lastWidth = currentWidth;
+      lastHeight = currentHeight;
+
       // Mobile optimization: Render at 60% resolution stretched via CSS to boost GPU fillrate
       const scale = isMobile ? 0.6 : 1.0;
-      canvas.width = window.innerWidth * scale;
-      canvas.height = window.innerHeight * scale;
+      canvas.width = currentWidth * scale;
+      canvas.height = currentHeight * scale;
       drawFrame(Math.floor(frameRef.current.frame));
     };
 
@@ -87,7 +117,7 @@ export default function ScrollVideoBackground() {
 
     const tl = gsap.to(frameRef.current, {
       frame: TOTAL_FRAMES - 1,
-      snap: 'frame',
+      snap: { frame: frameStep },
       ease: 'none',
       scrollTrigger: {
         trigger: 'body',
