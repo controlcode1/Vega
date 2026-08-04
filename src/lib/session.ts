@@ -42,23 +42,24 @@ export function decryptSession(token: string): { username: string; expires: numb
 }
 
 // Secure credentials check protected against timing and injection attacks
-const ADMIN_USERNAME = 'Nemo';
-const ADMIN_PASSWORD_HASH = crypto.createHash('sha256').update('Nemo').digest('hex');
-
 export function verifyCredentials(username: unknown, password: unknown): boolean {
   if (typeof username !== 'string' || typeof password !== 'string') {
     return false;
   }
   
-  // Hash the incoming password with SHA-256
+  const expectedUsername = process.env.ADMIN_USERNAME || 'Nemo';
+  const expectedPassword = process.env.ADMIN_PASSWORD || 'Nemo';
+  
+  // Hash passwords using SHA-256 for secure constant-time comparison
   const inputHash = crypto.createHash('sha256').update(password).digest('hex');
+  const expectedHash = crypto.createHash('sha256').update(expectedPassword).digest('hex');
   
   // Equal length padding for timing safe equality check
-  const userBuffer = Buffer.from(username.padEnd(32, ' '));
-  const expectedUserBuffer = Buffer.from(ADMIN_USERNAME.padEnd(32, ' '));
+  const userBuffer = Buffer.from(username.padEnd(64, ' '));
+  const expectedUserBuffer = Buffer.from(expectedUsername.padEnd(64, ' '));
   
   const hashBuffer = Buffer.from(inputHash);
-  const expectedHashBuffer = Buffer.from(ADMIN_PASSWORD_HASH);
+  const expectedHashBuffer = Buffer.from(expectedHash);
   
   // timingSafeEqual prevents timing attacks, which try to guess chars based on execution latency
   const usernameMatch = crypto.timingSafeEqual(userBuffer, expectedUserBuffer);
