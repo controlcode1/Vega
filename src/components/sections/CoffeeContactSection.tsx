@@ -82,30 +82,24 @@ export default function CoffeeContactSection() {
               </div>
             ))}
 
-            {/* Mini map */}
-            <div className="relative flex-1 min-h-[180px] rounded-2xl overflow-hidden border border-[#1E2230]">
-              <div className="absolute inset-0 bg-[#0E0E12]" />
-              <div className="absolute inset-0 opacity-10" style={{
-                backgroundImage: 'linear-gradient(to right, #1E2230 1px, transparent 1px), linear-gradient(to bottom, #1E2230 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-              }} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <span className="absolute -inset-4 rounded-full bg-[#A66DDB]/10 blur-md animate-ping" />
-                  <div className="relative w-8 h-8 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(166,109,219,0.6)]"
-                    style={{ background: 'linear-gradient(135deg, #72B4FF, #E91E8C)' }}>
-                    <span className="w-2.5 h-2.5 rounded-full bg-white" />
-                  </div>
-                </div>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
+            {/* Mini map - Embedded Google Maps */}
+            <div className="relative flex-1 min-h-[220px] rounded-2xl overflow-hidden border border-[#1E2230] h-[250px] lg:h-auto lg:min-h-[250px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d208.39364245692113!2d44.423820629026885!3d33.31101662648972!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x155781001e5705a3%3A0x918d6fbff36b19ad!2z2YLZhtin2Kkg2KrYp9mK2YUg2KjYsdmK2LM!5e0!3m2!1sar!2siq!4v1785810622463!5m2!1sar!2siq"
+                className="absolute inset-0 w-full h-full border-0 grayscale invert opacity-75 contrast-125"
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-4 left-4 right-4 z-10">
                 <div className="glass p-3 rounded-xl flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[9px] uppercase tracking-widest text-[#F8FAFC]/40">Vega Gaming Arena</p>
                     <p className="text-xs text-[#F8FAFC] font-medium mt-0.5">{isAr ? 'بغداد، العراق' : 'Baghdad, Iraq'}</p>
                   </div>
                   <a
-                    href="https://maps.google.com"
+                    href="https://maps.app.goo.gl/pHabYhpfeahNycsh7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 transition-opacity hover:opacity-80"

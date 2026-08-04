@@ -22,6 +22,15 @@ export interface MenuItem {
   badge?: string;
 }
 
+export interface Feedback {
+  id: string;
+  name: string;
+  text: string;
+  rating: number; // 1–5
+  status: 'pending' | 'approved' | 'hidden';
+  createdAt: string; // ISO date string
+}
+
 const DB_DIR = path.join(process.cwd(), 'src/lib');
 const DB_PATH = path.join(DB_DIR, 'db.json');
 
@@ -199,6 +208,7 @@ const DEFAULT_ITEMS: MenuItem[] = [
 export interface DbData {
   categories: Category[];
   items: MenuItem[];
+  feedback: Feedback[];
 }
 
 export function readDb(): DbData {
@@ -210,17 +220,22 @@ export function readDb(): DbData {
       const initialData: DbData = {
         categories: DEFAULT_CATEGORIES,
         items: DEFAULT_ITEMS,
+        feedback: [],
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
       return initialData;
     }
     const content = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    // Backward-compat: ensure feedback field exists
+    if (!parsed.feedback) parsed.feedback = [];
+    return parsed;
   } catch (error) {
     console.error('Error reading DB, returning defaults', error);
     return {
       categories: DEFAULT_CATEGORIES,
       items: DEFAULT_ITEMS,
+      feedback: [],
     };
   }
 }

@@ -16,14 +16,18 @@ import {
   AlertTriangle,
   FolderOpen,
   Eye,
-  Loader2
+  EyeOff,
+  Loader2,
+  MessageSquare,
+  Star,
+  CheckCircle2
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useI18n } from '@/lib/i18n';
 import Image from 'next/image';
-import { Category, MenuItem } from '@/lib/db';
+import { Category, MenuItem, Feedback } from '@/lib/db';
 
 const AVAILABLE_ICONS = [
   'Zap', 'Coffee', 'Gamepad2', 'ShoppingBag', 'Flame', 'GlassWater', 'CupSoda', 'Sparkles', 'Pizza', 'Cookie'
@@ -43,7 +47,11 @@ export default function AdminPage() {
   // Menu Management State
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'feedback'>('products');
+
+  // Feedback State
+  const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
   
   // New Category Form State
   const [catNameEn, setCatNameEn] = useState<string>('');
@@ -77,6 +85,7 @@ export default function AdminPage() {
         if (res.ok) {
           setAuthenticated(true);
           loadMenuData();
+          loadFeedback();
         }
       } catch (err) {
         console.error('Failed checking authentication', err);
@@ -85,6 +94,7 @@ export default function AdminPage() {
       }
     }
     checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadMenuData() {
@@ -102,6 +112,44 @@ export default function AdminPage() {
       console.error('Failed loading menu data', err);
     }
   }
+
+  async function loadFeedback() {
+    setFeedbackLoading(true);
+    try {
+      const res = await fetch(`/api/admin/feedback?t=${Date.now()}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setFeedbackList(data.feedback || []);
+      }
+    } catch (err) {
+      console.error('Failed loading feedback', err);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  }
+
+  const handleUpdateFeedback = async (id: string, status: 'approved' | 'hidden' | 'pending') => {
+    try {
+      await fetch('/api/admin/feedback', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      loadFeedback();
+    } catch (err) {
+      console.error('Failed updating feedback', err);
+    }
+  };
+
+  const handleDeleteFeedback = async (id: string) => {
+    if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا التقييم نهائياً؟' : 'Permanently delete this feedback?')) return;
+    try {
+      await fetch(`/api/admin/feedback?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      loadFeedback();
+    } catch (err) {
+      console.error('Failed deleting feedback', err);
+    }
+  };
 
   // Handle Login Submit
   const handleLogin = async (e: React.FormEvent) => {
@@ -126,6 +174,7 @@ export default function AdminPage() {
       } else {
         setAuthenticated(true);
         loadMenuData();
+        loadFeedback();
       }
     } catch (err) {
       setLoginError(isAr ? 'حدث خطأ في الاتصال بالخادم' : 'Server connection error');
@@ -507,6 +556,23 @@ export default function AdminPage() {
                     <FolderOpen className="w-4 h-4" />
                     {isAr ? 'الأقسام والتصنيفات' : 'Menu Categories'}
                   </button>
+
+                  <button
+                    onClick={() => { setActiveTab('feedback'); loadFeedback(); }}
+                    className={`pb-4 px-6 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                      activeTab === 'feedback'
+                        ? 'border-[#72B4FF] text-[#F8FAFC]'
+                        : 'border-transparent text-[#64748B] hover:text-[#F8FAFC]'
+                    }`}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    {isAr ? 'التقييمات' : 'Feedback'}
+                    {feedbackList.filter(f => f.status === 'pending').length > 0 && (
+                      <span className="text-[9px] bg-[#E91E8C] text-white px-1.5 py-0.5 rounded-full font-black">
+                        {feedbackList.filter(f => f.status === 'pending').length}
+                      </span>
+                    )}
+                  </button>
                 </div>
 
                 {/* Dynamic Content Tab Screens */}
@@ -792,7 +858,7 @@ export default function AdminPage() {
                         )}
                       </div>
                     </>
-                  ) : (
+                  ) : activeTab === 'categories' ? (
                     // ─────────────── TAB: CATEGORIES ───────────────
                     <>
                       {/* Form: Add Category */}
@@ -955,6 +1021,128 @@ export default function AdminPage() {
                         )}
                       </div>
                     </>
+                  ) : (
+                    // ─────────────── TAB: FEEDBACK ───────────────
+                    <div className="lg:col-span-12 space-y-4">
+                      <div className="flex items-center justify-between border-b border-[#1E2230]/40 pb-3">
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-[#64748B] flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          {isAr ? 'التقييمات الواردة' : 'Incoming Feedback'}
+                        </h2>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold bg-[#12141C] text-[#72B4FF] px-3 py-1 rounded-full border border-[#1E2230]">
+                            {feedbackList.length} {isAr ? 'إجمالي' : 'Total'}
+                          </span>
+                          <button
+                            onClick={loadFeedback}
+                            className="text-[10px] px-3 py-1 rounded-full border border-[#1E2230] text-[#64748B] hover:text-[#F8FAFC] transition-colors cursor-pointer"
+                          >
+                            {isAr ? 'تحديث' : 'Refresh'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {feedbackLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                          <Loader2 className="w-8 h-8 text-[#A66DDB] animate-spin" />
+                        </div>
+                      ) : feedbackList.length === 0 ? (
+                        <div className="text-center py-20 bg-[#0E0E12]/40 rounded-2xl border border-[#1E2230] text-[#64748B] font-light">
+                          {isAr ? 'لا يوجد تقييمات بعد.' : 'No feedback submitted yet.'}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {feedbackList.map((fb) => {
+                            const isPending = fb.status === 'pending';
+                            const isApproved = fb.status === 'approved';
+                            const isHidden = fb.status === 'hidden';
+                            return (
+                              <div
+                                key={fb.id}
+                                className={`rounded-xl bg-[#0E0E12] border p-5 transition-all ${
+                                  isPending
+                                    ? 'border-[#E91E8C]/30 shadow-[0_0_12px_rgba(233,30,140,0.05)]'
+                                    : isApproved
+                                    ? 'border-green-500/20'
+                                    : 'border-[#1E2230] opacity-60'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-4">
+                                  {/* Left: Content */}
+                                  <div className="flex-1 min-w-0">
+                                    {/* Stars + Status */}
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <div className="flex gap-0.5">
+                                        {[1,2,3,4,5].map(n => (
+                                          <Star key={n} className={`w-3.5 h-3.5 ${
+                                            n <= fb.rating ? 'fill-[#A66DDB] text-[#A66DDB]' : 'text-[#1E2230] fill-transparent'
+                                          }`} />
+                                        ))}
+                                      </div>
+                                      <span className={`text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full font-bold border ${
+                                        isPending ? 'text-[#E91E8C] bg-[#E91E8C]/10 border-[#E91E8C]/20' :
+                                        isApproved ? 'text-green-400 bg-green-950/30 border-green-500/20' :
+                                        'text-[#64748B] bg-[#1E2230]/40 border-[#1E2230]'
+                                      }`}>
+                                        {isPending ? (isAr ? 'قيد الانتظار' : 'Pending') :
+                                         isApproved ? (isAr ? 'معتمد' : 'Approved') :
+                                         (isAr ? 'مخفي' : 'Hidden')}
+                                      </span>
+                                      <span className="text-[9px] text-[#64748B] font-mono">
+                                        {new Date(fb.createdAt).toLocaleDateString('en-GB', {
+                                          day: 'numeric', month: 'short', year: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] font-semibold text-[#A66DDB] mt-1">
+                                      {fb.name}
+                                    </p>
+                                    <p className="text-sm text-[#F8FAFC]/80 font-light leading-relaxed mt-0.5">
+                                      {fb.text}
+                                    </p>
+                                  </div>
+
+                                  {/* Right: Action Buttons */}
+                                  <div className="flex flex-col gap-2 shrink-0">
+                                    {/* Show / Approve */}
+                                    <button
+                                      onClick={() => handleUpdateFeedback(fb.id, 'approved')}
+                                      disabled={isApproved}
+                                      title={isAr ? 'إظهار للعموم' : 'Show / Approve'}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed bg-green-950/30 text-green-400 hover:bg-green-500/20 border border-green-500/20"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      {isAr ? 'إظهار' : 'Show'}
+                                    </button>
+
+                                    {/* Hide */}
+                                    <button
+                                      onClick={() => handleUpdateFeedback(fb.id, 'hidden')}
+                                      disabled={isHidden}
+                                      title={isAr ? 'إخفاء من العموم' : 'Hide from public'}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed bg-[#1E2230]/60 text-[#64748B] hover:text-[#F8FAFC] hover:bg-[#1E2230] border border-[#1E2230]"
+                                    >
+                                      <EyeOff className="w-3.5 h-3.5" />
+                                      {isAr ? 'إخفاء' : 'Hide'}
+                                    </button>
+
+                                    {/* Delete */}
+                                    <button
+                                      onClick={() => handleDeleteFeedback(fb.id)}
+                                      title={isAr ? 'حذف نهائي' : 'Delete permanently'}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all cursor-pointer bg-red-950/20 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/10"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      {isAr ? 'حذف' : 'Delete'}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   )}
 
                 </div>

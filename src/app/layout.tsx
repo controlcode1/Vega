@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   title: "Vega Gaming Arena — ساحة فيغا للألعاب",
   description:
     "Premium gaming arena in Baghdad featuring high-end gaming stations, specialty coffee, and esports events. ساحة ألعاب متميزة في بغداد.",
+  icons: {
+    icon: "/icon.webp",
+    shortcut: "/favicon.ico",
+    apple: "/icon.webp",
+  },
 };
 
 export default function RootLayout({

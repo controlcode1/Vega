@@ -157,9 +157,14 @@ export default function Navbar() {
                 </a>
               </div>
               <div className="flex gap-4 sm:gap-6 text-xs text-[#64748B]">
-                {['Instagram', 'Discord', 'Twitch'].map((s) => (
-                  <a key={s} href="#" className="hover:text-[#F8FAFC] transition-colors">{s}</a>
-                ))}
+                <a
+                  href="https://www.instagram.com/vega.arena?igsh=bzY3Z3E0bGdvNDIx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#F8FAFC] transition-colors"
+                >
+                  Instagram
+                </a>
               </div>
             </div>
           </motion.div>

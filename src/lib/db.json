@@ -215,5 +215,14 @@
       "price": "5000",
       "image": "/uploads/1785618087035-ihumdq9j.webp"
     }
+  ],
+  "feedback": [
+    {
+      "id": "fb_1785812951279_yty178",
+      "text": "hhghghhg",
+      "rating": 5,
+      "status": "pending",
+      "createdAt": "2026-08-04T03:09:11.279Z"
+    }
   ]
 }

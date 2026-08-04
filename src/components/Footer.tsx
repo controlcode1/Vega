@@ -6,10 +6,7 @@ import Magnetic from './Magnetic';
 import { useI18n } from '@/lib/i18n';
 
 const SOCIAL_LINKS = [
-  { label: 'Instagram', href: '#' },
-  { label: 'Discord', href: '#' },
-  { label: 'X (Twitter)', href: '#' },
-  { label: 'Twitch', href: '#' },
+  { label: 'Instagram', href: 'https://www.instagram.com/vega.arena?igsh=bzY3Z3E0bGdvNDIx' },
 ];
 
 export default function Footer() {
@@ -112,9 +109,15 @@ export default function Footer() {
           {/* HQ */}
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
             <h4 className="text-[10px] tracking-widest text-[#F8FAFC]/30 font-medium uppercase">{f.hqTitle}</h4>
-            <span className="text-xs text-[#F8FAFC]/80 leading-relaxed font-light whitespace-pre-line">
+            <a
+              href="https://maps.app.goo.gl/pHabYhpfeahNycsh7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[#F8FAFC]/80 hover:text-[#A66DDB] transition-colors leading-relaxed font-light whitespace-pre-line flex items-center gap-1 group"
+            >
               {f.hqVal}
-            </span>
+              <ArrowUpRight className="h-3 w-3 text-[#F8FAFC]/40 group-hover:text-[#A66DDB] group-hover:rotate-45 transition-all duration-300 shrink-0" />
+            </a>
           </div>
         </div>
 

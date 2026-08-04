@@ -71,31 +71,32 @@ export default function MenuPage() {
         {/* ── Hero Cover ── */}
         <div className="relative w-full h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden border-b border-[#1E2230]">
           <Image
-            src="/gaming_anime_waves.png"
+            src="/ca4f1475ff5f22a651500f4bdf7b1509.jpg"
             alt="Vega Gaming Arena Menu"
             fill
             priority
-            className="object-cover"
+            className="object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-[#070708]/50 to-transparent" />
 
-          <div className="relative z-10 text-center px-6 max-w-3xl space-y-4">
-            {/* Back */}
+          {/* Back Button - Top Left with Glass Container */}
+          <div className="absolute top-24 start-6 md:top-28 md:start-12 z-30">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-block"
             >
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#A66DDB] hover:text-[#F8FAFC] transition-colors group"
+                className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#A66DDB] hover:text-[#F8FAFC] transition-colors group bg-[#0E0E12]/60 backdrop-blur-md px-4 py-2.5 rounded-full border border-[#1E2230] hover:border-[#A66DDB]/40"
               >
-                <ArrowLeft className="w-3 h-3 transform group-hover:-translate-x-1 transition-transform" />
+                <ArrowLeft className="w-3 h-3 transform group-hover:-translate-x-1 transition-transform rtl:rotate-180 rtl:group-hover:translate-x-1" />
                 {isAr ? 'الرئيسية' : 'Back'}
               </Link>
             </motion.div>
+          </div>
 
+          <div className="relative z-10 text-center px-6 max-w-3xl space-y-4">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
