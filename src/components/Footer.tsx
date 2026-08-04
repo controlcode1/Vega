@@ -110,7 +110,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
             <h4 className="text-[10px] tracking-widest text-[#F8FAFC]/30 font-medium uppercase">{f.hqTitle}</h4>
             <a
-              href="https://maps.app.goo.gl/pHabYhpfeahNycsh7"
+              href="https://maps.app.goo.gl/AAeoG4YkCYsFfgfm8"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-[#F8FAFC]/80 hover:text-[#A66DDB] transition-colors leading-relaxed font-light whitespace-pre-line flex items-center gap-1 group"

@@ -3,8 +3,7 @@ import { cookies } from 'next/headers';
 import { decryptSession } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabase';
 import { invalidateCache, CACHE_KEYS } from '@/lib/redis';
-import fs from 'fs';
-import path from 'path';
+import { uploadToR2, deleteFromR2, r2KeyFromUrl } from '@/lib/r2';
 import sharp from 'sharp';
 
 async function checkAuth(): Promise<boolean> {
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Selected category does not exist' }, { status: 400 });
     }
 
-    // Handle image upload (keep local /uploads/ storage)
+    // ── Handle image upload → Cloudflare R2 ──────────────────────────────────
     const imageFile = formData.get('image');
     let imageUrl = '';
 
@@ -60,30 +59,31 @@ export async function POST(request: Request) {
       const file = imageFile as unknown as File;
 
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-        return NextResponse.json({ error: 'Only image files (JPEG, PNG, GIF, WEBP) are allowed' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Only image files (JPEG, PNG, GIF, WEBP) are allowed' },
+          { status: 400 },
+        );
       }
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json({ error: 'File size exceeds 20MB limit' }, { status: 400 });
       }
 
-      const bytes = await file.arrayBuffer();
+      // Convert to optimized WebP via sharp
+      const bytes     = await file.arrayBuffer();
       const rawBuffer = Buffer.from(bytes);
-
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 82, effort: 4, lossless: false })
         .toBuffer();
 
-      const cleanFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.webp`;
-      const uploadDir = path.join(process.cwd(), 'public/uploads');
+      // Build a unique R2 key under "products/" folder
+      const key = `products/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.webp`;
 
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      // Upload to Cloudflare R2 and get back the public CDN URL
+      imageUrl = await uploadToR2(webpBuffer, key, 'image/webp');
 
-      fs.writeFileSync(path.join(uploadDir, cleanFilename), webpBuffer);
-      imageUrl = `/uploads/${cleanFilename}`;
-    } else if (typeof imageFile === 'string') {
-      imageUrl = imageFile;
+    } else if (typeof imageFile === 'string' && imageFile.trim()) {
+      // Allow passing a direct URL (e.g. Unsplash or existing CDN link)
+      imageUrl = imageFile.trim();
     }
 
     if (!imageUrl) {
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
         description,
         description_ar: descriptionAr,
         price,
-        image:          imageUrl,
+        image:          imageUrl,   // Now always a cloud CDN URL
         tag,
         tag_ar:         tagAr,
         badge,
@@ -158,7 +158,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
 
-    // Fetch the item first to get image path
+    // Fetch the item first to get the image URL
     const { data: item } = await supabaseAdmin
       .from('menu_items')
       .select('image')
@@ -169,11 +169,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Delete local image file if applicable
-    if (item.image?.startsWith('/uploads/')) {
-      const filePath = path.join(process.cwd(), 'public', item.image);
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch (e) { console.error('Error deleting file', e); }
+    // ── Delete image from Cloudflare R2 if it's an R2 URL ────────────────────
+    if (item.image) {
+      const r2Key = r2KeyFromUrl(item.image);
+      if (r2Key) {
+        try {
+          await deleteFromR2(r2Key);
+        } catch (e) {
+          // Non-fatal: log but don't block DB deletion
+          console.error('[R2] Error deleting image from R2:', e);
+        }
       }
     }
 

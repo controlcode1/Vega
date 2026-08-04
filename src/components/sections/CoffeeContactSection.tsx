@@ -85,7 +85,7 @@ export default function CoffeeContactSection() {
             {/* Mini map - Embedded Google Maps */}
             <div className="relative flex-1 min-h-[220px] rounded-2xl overflow-hidden border border-[#1E2230] h-[250px] lg:h-auto lg:min-h-[250px]">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d208.39364245692113!2d44.423820629026885!3d33.31101662648972!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x155781001e5705a3%3A0x918d6fbff36b19ad!2z2YLZhtin2Kkg2KrYp9mK2YUg2KjYsdmK2LM!5e0!3m2!1sar!2siq!4v1785810622463!5m2!1sar!2siq"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d208.39341524888124!2d44.42387799388313!3d33.31111168590754!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1557810002286ad9%3A0x66eff30aeb83b1aa!2z2YLYp9i52Kkg2KfZhNi52KfYqCDZgdmK2KzYpyBWZWdhIGdhbWluZyBhcmVuYQ!5e0!3m2!1sar!2siq!4v1785849096722!5m2!1sar!2siq"
                 className="absolute inset-0 w-full h-full border-0 grayscale invert opacity-75 contrast-125"
                 allowFullScreen={true}
                 loading="lazy"
@@ -99,7 +99,7 @@ export default function CoffeeContactSection() {
                     <p className="text-xs text-[#F8FAFC] font-medium mt-0.5">{isAr ? 'بغداد، العراق' : 'Baghdad, Iraq'}</p>
                   </div>
                   <a
-                    href="https://maps.app.goo.gl/pHabYhpfeahNycsh7"
+                    href="https://maps.app.goo.gl/AAeoG4YkCYsFfgfm8"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 transition-opacity hover:opacity-80"

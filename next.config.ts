@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
+      {
+        // Cloudflare R2 custom CDN domain
+        protocol: 'https',
+        hostname: 'assets.vegaarena.com',
+        pathname: '/**',
+      },
+      {
+        // Fallback: Cloudflare R2 public .dev subdomain (if custom domain not yet active)
+        protocol: 'https',
+        hostname: '*.r2.dev',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
