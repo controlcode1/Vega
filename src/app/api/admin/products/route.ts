@@ -197,3 +197,125 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
+
+// ── PUT /api/admin/products — Update an existing product ──
+export async function PUT(request: Request) {
+  if (!(await checkAuth())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const formData = await request.formData();
+
+    const id            = formData.get('id')?.toString().trim() || '';
+    const categoryId    = formData.get('categoryId')?.toString().trim() || '';
+    const name          = formData.get('name')?.toString().trim() || '';
+    const nameAr        = formData.get('nameAr')?.toString().trim() || '';
+    const description   = formData.get('description')?.toString().trim() || '';
+    const descriptionAr = formData.get('descriptionAr')?.toString().trim() || '';
+    const price         = formData.get('price')?.toString().trim() || '';
+    const tag           = formData.get('tag')?.toString().trim() || null;
+    const tagAr         = formData.get('tagAr')?.toString().trim() || null;
+    const badge         = formData.get('badge')?.toString().trim() || null;
+
+    if (!id || !categoryId || !name || !nameAr || !price) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Fetch existing product
+    const { data: existing } = await supabaseAdmin
+      .from('menu_items')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // ── Handle image update if new file provided ──
+    const imageFile = formData.get('image');
+    let imageUrl = existing.image; // default to existing image
+
+    if (imageFile && typeof imageFile === 'object' && 'arrayBuffer' in imageFile) {
+      const file = imageFile as unknown as File;
+
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        return NextResponse.json(
+          { error: 'Only image files (JPEG, PNG, GIF, WEBP) are allowed' },
+          { status: 400 },
+        );
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: 'File size exceeds 20MB limit' }, { status: 400 });
+      }
+
+      // Convert new image to optimized WebP
+      const bytes = await file.arrayBuffer();
+      const webpBuffer = await sharp(Buffer.from(bytes))
+        .webp({ quality: 82, effort: 4, lossless: false })
+        .toBuffer();
+
+      const key = `products/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.webp`;
+      imageUrl = await uploadToR2(webpBuffer, key, 'image/webp');
+
+      // Delete old image from R2 if it existed
+      if (existing.image) {
+        const oldKey = r2KeyFromUrl(existing.image);
+        if (oldKey) {
+          try {
+            await deleteFromR2(oldKey);
+          } catch (e) {
+            console.error('[R2] Error deleting previous image:', e);
+          }
+        }
+      }
+    } else if (typeof imageFile === 'string' && imageFile.trim()) {
+      imageUrl = imageFile.trim();
+    }
+
+    // Update product in Supabase
+    const { data: updatedProduct, error } = await supabaseAdmin
+      .from('menu_items')
+      .update({
+        category_id:    categoryId,
+        name,
+        name_ar:        nameAr,
+        description,
+        description_ar: descriptionAr,
+        price,
+        image:          imageUrl,
+        tag,
+        tag_ar:         tagAr,
+        badge,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await invalidateCache(CACHE_KEYS.MENU_DATA);
+
+    return NextResponse.json({
+      success: true,
+      product: {
+        id:            updatedProduct.id,
+        categoryId:    updatedProduct.category_id,
+        name:          updatedProduct.name,
+        nameAr:        updatedProduct.name_ar,
+        description:   updatedProduct.description ?? '',
+        descriptionAr: updatedProduct.description_ar ?? '',
+        price:         updatedProduct.price,
+        image:         updatedProduct.image ?? '',
+        tag:           updatedProduct.tag ?? undefined,
+        tagAr:         updatedProduct.tag_ar ?? undefined,
+        badge:         updatedProduct.badge ?? undefined,
+      },
+    });
+  } catch (error) {
+    console.error('Product PUT error:', error);
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+  }
+}
+

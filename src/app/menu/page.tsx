@@ -64,8 +64,8 @@ export default function MenuPage() {
 
       <main className="min-h-screen bg-[#070708] relative text-[#F8FAFC] overflow-hidden">
         {/* Background glows */}
-        <div className="absolute top-[30vh] left-[-10vw] w-[600px] h-[600px] rounded-full bg-[#72B4FF]/5 blur-[150px] -z-10" />
-        <div className="absolute bottom-[20vh] right-[-10vw] w-[500px] h-[500px] rounded-full bg-[#E91E8C]/4 blur-[120px] -z-10" />
+        <div className="absolute top-[30vh] left-[-10vw] w-[600px] h-[600px] rounded-full bg-[#72B4FF]/5 blur-[150px] -z-10 pointer-events-none transform-gpu translate-z-0" />
+        <div className="absolute bottom-[20vh] right-[-10vw] w-[500px] h-[500px] rounded-full bg-[#E91E8C]/4 blur-[120px] -z-10 pointer-events-none transform-gpu translate-z-0" />
 
         {/* ── Hero Cover ── */}
         <div className="relative w-full h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden border-b border-[#1E2230]">
@@ -176,7 +176,7 @@ export default function MenuPage() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: idx * 0.07 }}
-                    className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_40px_rgba(166,109,219,0.12)]"
+                    className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_40px_rgba(166,109,219,0.12)] transform-gpu"
                   >
                     {/* ── Image ── */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#121217]">
@@ -185,7 +185,7 @@ export default function MenuPage() {
                         alt={isAr ? item.nameAr : item.name}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-108"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105 transform-gpu"
                       />
                       {/* Gradient overlay at bottom */}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-60" />

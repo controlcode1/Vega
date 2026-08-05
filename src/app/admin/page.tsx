@@ -20,7 +20,9 @@ import {
   Loader2,
   MessageSquare,
   Star,
-  CheckCircle2
+  CheckCircle2,
+  Pencil,
+  X
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -61,7 +63,8 @@ export default function AdminPage() {
   const [catSuccess, setCatSuccess] = useState<string>('');
   const [catLoading, setCatLoading] = useState<boolean>(false);
 
-  // New Product Form State
+  // New/Edit Product Form State
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [prodCategoryId, setProdCategoryId] = useState<string>('');
   const [prodNameEn, setProdNameEn] = useState<string>('');
   const [prodNameAr, setProdNameAr] = useState<string>('');
@@ -282,53 +285,94 @@ export default function AdminPage() {
     }
   };
 
-  // Handle Product Add
-  const handleAddProduct = async (e: React.FormEvent) => {
+  // Start editing product
+  const handleStartEditProduct = (item: MenuItem) => {
+    setEditingProductId(item.id);
+    setProdCategoryId(item.categoryId);
+    setProdNameEn(item.name || '');
+    setProdNameAr(item.nameAr || '');
+    setProdDescEn(item.description || '');
+    setProdDescAr(item.descriptionAr || '');
+    setProdPrice(item.price || '');
+    setProdTagEn(item.tag || '');
+    setProdTagAr(item.tagAr || '');
+    setProdBadge(item.badge || '');
+    setProdImageFile(null);
+    setProdImagePreview(item.image || null);
+    setProdError('');
+    setProdSuccess('');
+  };
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setProdNameEn('');
+    setProdNameAr('');
+    setProdDescEn('');
+    setProdDescAr('');
+    setProdPrice('');
+    setProdTagEn('');
+    setProdTagAr('');
+    setProdBadge('');
+    setProdImageFile(null);
+    setProdImagePreview(null);
+    setProdError('');
+    setProdSuccess('');
+  };
+
+  // Handle Product Save (Add or Update)
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setProdError('');
     setProdSuccess('');
     setProdLoading(true);
 
-    if (!prodImageFile) {
+    const isEdit = !!editingProductId;
+
+    if (!isEdit && !prodImageFile) {
       setProdError(isAr ? 'الرجاء اختيار صورة المنتج' : 'Please select a product image file');
       setProdLoading(false);
       return;
     }
 
     const formData = new FormData();
+    if (isEdit) {
+      formData.append('id', editingProductId);
+    }
     formData.append('categoryId', prodCategoryId);
     formData.append('name', prodNameEn);
     formData.append('nameAr', prodNameAr);
     formData.append('description', prodDescEn);
     formData.append('descriptionAr', prodDescAr);
     formData.append('price', prodPrice);
-    formData.append('image', prodImageFile);
+    
+    if (prodImageFile) {
+      formData.append('image', prodImageFile);
+    } else if (isEdit && prodImagePreview) {
+      formData.append('image', prodImagePreview);
+    }
+
     if (prodTagEn) formData.append('tag', prodTagEn);
     if (prodTagAr) formData.append('tagAr', prodTagAr);
     if (prodBadge) formData.append('badge', prodBadge);
 
     try {
       const res = await fetch('/api/admin/products', {
-        method: 'POST',
+        method: isEdit ? 'PUT' : 'POST',
         body: formData,
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setProdError(data.error || 'Failed to add product');
+        setProdError(data.error || (isEdit ? 'Failed to update product' : 'Failed to add product'));
       } else {
-        setProdSuccess(isAr ? 'تم إضافة المنتج بنجاح!' : 'Product added successfully!');
-        setProdNameEn('');
-        setProdNameAr('');
-        setProdDescEn('');
-        setProdDescAr('');
-        setProdPrice('');
-        setProdTagEn('');
-        setProdTagAr('');
-        setProdBadge('');
-        setProdImageFile(null);
-        setProdImagePreview(null);
+        setProdSuccess(
+          isEdit 
+            ? (isAr ? 'تم تعديل المنتج بنجاح!' : 'Product updated successfully!') 
+            : (isAr ? 'تم إضافة المنتج بنجاح!' : 'Product added successfully!')
+        );
+        handleCancelEdit();
         loadMenuData();
       }
     } catch (err) {
@@ -482,12 +526,6 @@ export default function AdminPage() {
                         </>
                       )}
                     </button>
-
-                    {/* Protection Notice */}
-                    <div className="pt-2 text-center text-[10px] text-[#64748B] flex items-center justify-center gap-1.5">
-                      <Lock className="w-3 h-3 text-[#A66DDB]" />
-                      <span>{isAr ? 'محمي ضد هجمات الحقن والقرصنة' : 'Protected against SQLi, XSS, and Timing Attacks'}</span>
-                    </div>
                   </form>
                 </div>
               </motion.div>
@@ -586,9 +624,25 @@ export default function AdminPage() {
                         className="lg:col-span-5 rounded-2xl p-6 border border-[#1E2230] relative overflow-hidden"
                         style={{ background: 'linear-gradient(135deg, rgba(14,14,20,0.85) 0%, rgba(8,8,12,0.95) 100%)' }}
                       >
-                        <div className="flex items-center gap-2.5 mb-5">
-                          <Plus className="w-5 h-5 text-[#72B4FF]" />
-                          <h2 className="text-base font-bold text-[#F8FAFC]">{isAr ? 'إضافة منتج جديد' : 'Add New Product'}</h2>
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="flex items-center gap-2.5">
+                            {editingProductId ? <Pencil className="w-5 h-5 text-[#A66DDB]" /> : <Plus className="w-5 h-5 text-[#72B4FF]" />}
+                            <h2 className="text-base font-bold text-[#F8FAFC]">
+                              {editingProductId 
+                                ? (isAr ? 'تعديل المنتج الحالي' : 'Edit Product') 
+                                : (isAr ? 'إضافة منتج جديد' : 'Add New Product')}
+                            </h2>
+                          </div>
+                          {editingProductId && (
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="px-2.5 py-1 rounded-lg bg-[#1E2230]/60 hover:bg-red-500/20 text-xs text-[#64748B] hover:text-red-400 border border-[#1E2230] flex items-center gap-1 transition-all"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              {isAr ? 'إلغاء' : 'Cancel'}
+                            </button>
+                          )}
                         </div>
 
                         {categories.length === 0 ? (
@@ -597,7 +651,7 @@ export default function AdminPage() {
                             <span>{isAr ? 'الرجاء إضافة تصنيف/قسم أولاً قبل إضافة المنتجات.' : 'Please add a category first before creating products.'}</span>
                           </div>
                         ) : (
-                          <form onSubmit={handleAddProduct} className="space-y-4">
+                          <form onSubmit={handleSaveProduct} className="space-y-4">
                             {/* Category Dropdown */}
                             <div className="space-y-1.5">
                               <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'القسم / التصنيف' : 'Category'}</label>
@@ -614,81 +668,71 @@ export default function AdminPage() {
                               </select>
                             </div>
 
-                            {/* Product Name EN */}
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Names */}
+                            <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الاسم بالإنكليزية' : 'Name (EN)'}</label>
+                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الاسم (إنجليزي)' : 'Name (EN)'}</label>
                                 <input
                                   type="text"
                                   required
                                   value={prodNameEn}
                                   onChange={(e) => setProdNameEn(e.target.value)}
-                                  placeholder="e.g. Omen Latte"
-                                  className="w-full px-4 py-2.5 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC]"
+                                  placeholder="Espresso Single"
+                                  className="w-full px-3 py-2 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC]"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الاسم بالعربية' : 'Name (AR)'}</label>
+                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الاسم (عربي)' : 'Name (AR)'}</label>
                                 <input
                                   type="text"
                                   required
                                   value={prodNameAr}
                                   onChange={(e) => setProdNameAr(e.target.value)}
-                                  placeholder="مثال: أومن لاتيه"
-                                  className="w-full px-4 py-2.5 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC] font-arabic"
+                                  placeholder="اسبريسو سنقل"
+                                  className="w-full px-3 py-2 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC]"
                                 />
                               </div>
                             </div>
 
-                            {/* Price */}
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'السعر (مثال: 5,000 IQD)' : 'Price (e.g. 5,000 IQD)'}</label>
-                              <input
-                                type="text"
-                                required
-                                value={prodPrice}
-                                onChange={(e) => setProdPrice(e.target.value)}
-                                placeholder="5,500 IQD"
-                                className="w-full px-4 py-2.5 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#A66DDB] text-[#F8FAFC]"
-                              />
-                            </div>
-
                             {/* Descriptions */}
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الوصف بالإنكليزية' : 'Description (EN)'}</label>
-                              <textarea
-                                value={prodDescEn}
-                                onChange={(e) => setProdDescEn(e.target.value)}
-                                placeholder="Details about ingredients, origin..."
-                                rows={2}
-                                className="w-full px-4 py-2.5 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC]"
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الوصف بالعربية' : 'Description (AR)'}</label>
-                              <textarea
-                                value={prodDescAr}
-                                onChange={(e) => setProdDescAr(e.target.value)}
-                                placeholder="مكونات المشروب، المصدر..."
-                                rows={2}
-                                className="w-full px-4 py-2.5 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC] font-arabic"
-                              />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الوصف (إنجليزي)' : 'Desc (EN)'}</label>
+                                <textarea
+                                  rows={2}
+                                  value={prodDescEn}
+                                  onChange={(e) => setProdDescEn(e.target.value)}
+                                  placeholder="Rich espresso shot..."
+                                  className="w-full px-3 py-2 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC] resize-none"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'الوصف (عربي)' : 'Desc (AR)'}</label>
+                                <textarea
+                                  rows={2}
+                                  value={prodDescAr}
+                                  onChange={(e) => setProdDescAr(e.target.value)}
+                                  placeholder="شوت اسبريسو غني..."
+                                  className="w-full px-3 py-2 bg-[#070708]/80 border border-[#1E2230] rounded-xl text-xs focus:outline-none focus:border-[#72B4FF] text-[#F8FAFC] resize-none"
+                                />
+                              </div>
                             </div>
 
-                            {/* Optional Tags */}
-                            <div className="grid grid-cols-3 gap-2">
+                            {/* Price & Options */}
+                            <div className="grid grid-cols-3 gap-3">
                               <div className="space-y-1.5">
-                                <label className="text-[9px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'وسم (EN)' : 'Tag (EN)'}</label>
+                                <label className="text-[9px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'السعر' : 'Price'}</label>
                                 <input
                                   type="text"
-                                  value={prodTagEn}
-                                  onChange={(e) => setProdTagEn(e.target.value)}
-                                  placeholder="Best Seller"
+                                  required
+                                  value={prodPrice}
+                                  onChange={(e) => setProdPrice(e.target.value)}
+                                  placeholder="3,000 د.ع"
                                   className="w-full px-3 py-2 bg-[#070708]/80 border border-[#1E2230] rounded-lg text-[10px] focus:outline-none focus:border-[#72B4FF]"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[9px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'وسم (AR)' : 'Tag (AR)'}</label>
+                                <label className="text-[9px] uppercase tracking-widest text-[#64748B] font-semibold">{isAr ? 'تاغ / وسم' : 'Tag'}</label>
                                 <input
                                   type="text"
                                   value={prodTagAr}
@@ -715,7 +759,7 @@ export default function AdminPage() {
                               <div className="border-2 border-dashed border-[#1E2230] hover:border-[#A66DDB]/40 rounded-xl p-4 transition-all bg-[#070708]/40 relative">
                                 <input
                                   type="file"
-                                  required
+                                  required={!editingProductId}
                                   accept="image/*"
                                   onChange={handleImageChange}
                                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
@@ -731,8 +775,15 @@ export default function AdminPage() {
                                       />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <p className="text-xs text-[#F8FAFC] truncate font-medium">{prodImageFile?.name}</p>
-                                      <p className="text-[10px] text-[#64748B] mt-0.5">{(prodImageFile!.size / 1024).toFixed(1)} KB</p>
+                                      <p className="text-xs text-[#F8FAFC] truncate font-medium">
+                                        {prodImageFile?.name || (isAr ? 'الصورة الحالية' : 'Current Image')}
+                                      </p>
+                                      {prodImageFile && (
+                                        <p className="text-[10px] text-[#64748B] mt-0.5">{(prodImageFile.size / 1024).toFixed(1)} KB</p>
+                                      )}
+                                      {editingProductId && !prodImageFile && (
+                                        <p className="text-[10px] text-[#72B4FF] mt-0.5">{isAr ? 'انقر لتغيير الصورة (اختياري)' : 'Click to change image (optional)'}</p>
+                                      )}
                                     </div>
                                   </div>
                                 ) : (
@@ -770,8 +821,10 @@ export default function AdminPage() {
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
                                 <>
-                                  <Plus className="w-4 h-4" />
-                                  {isAr ? 'حفظ وإضافة المنتج' : 'Add Product'}
+                                  {editingProductId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                  {editingProductId 
+                                    ? (isAr ? 'تحديث وتطبيق التعديلات' : 'Save Changes') 
+                                    : (isAr ? 'حفظ وإضافة المنتج' : 'Add Product')}
                                 </>
                               )}
                             </button>
@@ -799,10 +852,13 @@ export default function AdminPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {items.map((item) => {
                               const itemCat = categories.find(c => c.id === item.categoryId);
+                              const isEditingThis = editingProductId === item.id;
                               return (
                                 <div 
                                   key={item.id}
-                                  className="rounded-xl bg-[#0E0E12] border border-[#1E2230] p-4 flex gap-4 relative group"
+                                  className={`rounded-xl bg-[#0E0E12] border p-4 flex gap-4 relative group transition-all ${
+                                    isEditingThis ? 'border-[#A66DDB] ring-1 ring-[#A66DDB]/50' : 'border-[#1E2230]'
+                                  }`}
                                 >
                                   {/* Thumbnail */}
                                   <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#1E2230] bg-[#121217]">
@@ -835,7 +891,7 @@ export default function AdminPage() {
                                         {itemCat ? (isAr ? itemCat.nameAr : itemCat.nameEn) : 'Unknown'}
                                       </span>
                                       
-                                      {item.badge && (
+                              {item.badge && (
                                         <span className="text-[8px] uppercase tracking-wider text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded border border-[#E91E8C]/15">
                                           {item.badge}
                                         </span>
@@ -843,14 +899,23 @@ export default function AdminPage() {
                                     </div>
                                   </div>
 
-                                  {/* Delete Button */}
-                                  <button
-                                    onClick={() => handleDeleteProduct(item.id)}
-                                    className="absolute top-2 right-2 md:opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-950/20 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/10 transition-all cursor-pointer"
-                                    title={isAr ? 'حذف المنتج' : 'Delete Product'}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  {/* Action Buttons: Edit & Delete */}
+                                  <div className="absolute top-2 right-2 md:opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
+                                    <button
+                                      onClick={() => handleStartEditProduct(item)}
+                                      className="p-1.5 rounded-lg bg-[#A66DDB]/20 text-[#A66DDB] hover:bg-[#A66DDB] hover:text-white border border-[#A66DDB]/30 transition-all cursor-pointer"
+                                      title={isAr ? 'تعديل المنتج' : 'Edit Product'}
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteProduct(item.id)}
+                                      className="p-1.5 rounded-lg bg-red-950/20 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/10 transition-all cursor-pointer"
+                                      title={isAr ? 'حذف المنتج' : 'Delete Product'}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             })}
