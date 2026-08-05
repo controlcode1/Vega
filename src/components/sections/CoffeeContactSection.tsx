@@ -12,14 +12,31 @@ export default function CoffeeContactSection() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to send.');
+      }
+
       setIsSubmitted(true);
-    }, 1500);
+    } catch (err: any) {
+      setError(isAr ? 'حدث خطأ أثناء الإرسال. حاول مجدداً.' : 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const infoCards = [
@@ -185,6 +202,13 @@ export default function CoffeeContactSection() {
                       </>
                     )}
                   </button>
+
+                  {/* Error message */}
+                  {error && (
+                    <p className="text-center text-sm text-[#E91E8C] font-light animate-pulse">
+                      {error}
+                    </p>
+                  )}
                 </form>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 relative z-10">

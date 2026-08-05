@@ -57,6 +57,7 @@ export async function uploadToR2(
     Key:         key,
     Body:        buffer,
     ContentType: mimeType,
+    CacheControl: 'public, max-age=31536000, immutable',
     // Note: R2 does NOT support object-level ACLs.
     // Public access is controlled at bucket level via Custom Domain (assets.vegaarena.com)
   });

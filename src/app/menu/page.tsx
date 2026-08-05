@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Category, MenuItem } from '@/lib/db';
@@ -20,6 +20,7 @@ export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
   const [activeCategory, setActiveCategory] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const { lang, isAr } = useI18n();
 
   useEffect(() => {
@@ -55,12 +56,133 @@ export default function MenuPage() {
     loadMenu();
   }, []);
 
+  // Close modal on Escape key
+  const closeModal = useCallback(() => setSelectedItem(null), []);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [closeModal]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedItem) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedItem]);
+
   const getCatName = (cat: Category) =>
     isAr ? cat.nameAr : cat.nameEn;
 
   return (
     <>
       <Navbar />
+
+      {/* ── Product Modal ── */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="fixed inset-0 z-[999] flex items-center justify-center px-4"
+            style={{ background: 'rgba(7,7,8,0.85)', backdropFilter: 'blur(12px)' }}
+            onClick={closeModal}
+          >
+            <motion.div
+              key="modal-card"
+              initial={{ opacity: 0, scale: 0.88, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{
+                type: 'spring',
+                stiffness: 320,
+                damping: 28,
+                mass: 0.9,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm rounded-3xl overflow-hidden border border-[#1E2230]"
+              style={{ background: 'linear-gradient(160deg, #0E0E12 0%, #12141C 100%)' }}
+            >
+              {/* Close Button */}
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center border border-[#1E2230] bg-[#0E0E12]/80 text-[#64748B] hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Image */}
+              <div className="relative w-full aspect-[4/3]">
+                <Image
+                  src={selectedItem.image}
+                  alt={isAr ? selectedItem.nameAr : selectedItem.name}
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-[#0E0E12]/20 to-transparent" />
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
+                  {selectedItem.tag && (
+                    <span
+                      className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                      style={{ background: 'linear-gradient(135deg, #72B4FF, #A66DDB)', color: '#fff' }}
+                    >
+                      {isAr && selectedItem.tagAr ? selectedItem.tagAr : selectedItem.tag}
+                    </span>
+                  )}
+                  {selectedItem.badge && (
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30">
+                      {selectedItem.badge}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-5 space-y-3" dir={isAr ? 'rtl' : 'ltr'}>
+                {/* Name + Price row */}
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="font-sans font-bold text-lg text-[#F8FAFC] leading-snug flex-1">
+                    {isAr ? selectedItem.nameAr : selectedItem.name}
+                  </h2>
+                  <span
+                    className="font-sans font-black text-xl shrink-0"
+                    style={{
+                      background: 'linear-gradient(135deg, #72B4FF, #E91E8C)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {selectedItem.price}
+                  </span>
+                </div>
+
+                {/* Description */}
+                {(isAr ? selectedItem.descriptionAr : selectedItem.description) && (
+                  <p className="text-sm text-[#94A3B8] font-light leading-relaxed">
+                    {isAr ? selectedItem.descriptionAr : selectedItem.description}
+                  </p>
+                )}
+
+                {/* Bottom gradient line */}
+                <div
+                  className="h-px w-full mt-4"
+                  style={{ background: 'linear-gradient(to right, #72B4FF, #A66DDB, #E91E8C)' }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="min-h-screen bg-[#070708] relative text-[#F8FAFC] overflow-hidden">
         {/* Background glows */}
@@ -161,92 +283,95 @@ export default function MenuPage() {
               <p>{isAr ? 'لم يتم العثور على أي أقسام بعد.' : 'No menu categories found yet.'}</p>
             </div>
           ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory}
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -25 }}
-                transition={{ duration: 0.45, ease: 'easeInOut' }}
-                className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6"
-              >
-                {menuItems[activeCategory]?.map((item, idx) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.07 }}
-                    className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_40px_rgba(166,109,219,0.12)] transform-gpu"
-                  >
-                    {/* ── Image ── */}
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#121217]">
-                      <Image
-                        src={item.image}
-                        alt={isAr ? item.nameAr : item.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105 transform-gpu"
-                      />
-                      {/* Gradient overlay at bottom */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-60" />
-
-                      {/* Badges */}
-                      <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
-                        {item.tag && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                            style={{ background: 'linear-gradient(135deg, #72B4FF, #A66DDB)', color: '#fff' }}>
-                            {isAr && item.tagAr ? item.tagAr : item.tag}
-                          </span>
-                        )}
-                        {item.badge && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ── Info ── */}
-                    <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5 gap-1.5 sm:gap-2">
-                      {/* Name + Price */}
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
-                        <h3 className="font-sans font-bold text-xs sm:text-sm md:text-base text-[#F8FAFC] group-hover:text-[#A66DDB] transition-colors leading-snug flex-1">
-                          {isAr ? item.nameAr : item.name}
-                        </h3>
-                        <span
-                          className="font-sans font-black text-xs sm:text-sm md:text-base shrink-0"
-                          style={{
-                            background: 'linear-gradient(135deg, #72B4FF, #E91E8C)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                          }}
-                        >
-                          {item.price}
-                        </span>
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-[10px] sm:text-[11px] md:text-xs text-[#64748B] font-light leading-relaxed flex-1 hidden sm:block">
-                        {isAr ? item.descriptionAr : item.description}
-                      </p>
-                    </div>
-
-                    {/* Bottom gradient line */}
-                    <div
-                      className="h-px w-0 group-hover:w-full transition-all duration-500"
-                      style={{ background: 'linear-gradient(to right, #72B4FF, #E91E8C)' }}
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6"
+            >
+              {menuItems[activeCategory]?.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: idx * 0.07 }}
+                  className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_40px_rgba(166,109,219,0.12)] transform-gpu cursor-pointer active:scale-[0.97]"
+                  onClick={() => setSelectedItem(item)}
+                >
+                  {/* ── Image ── */}
+                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#121217]">
+                    <Image
+                      src={item.image}
+                      alt={isAr ? item.nameAr : item.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105 transform-gpu"
                     />
-                  </motion.div>
-                ))}
-                
-                {(!menuItems[activeCategory] || menuItems[activeCategory].length === 0) && (
-                  <div className="col-span-full py-16 text-center text-[#64748B] font-light">
-                    {isAr ? 'لا يوجد منتجات في هذا القسم حالياً.' : 'No products in this category yet.'}
+                    {/* Gradient overlay at bottom */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-60" />
+
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
+                      {item.tag && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                          style={{ background: 'linear-gradient(135deg, #72B4FF, #A66DDB)', color: '#fff' }}>
+                          {isAr && item.tagAr ? item.tagAr : item.tag}
+                        </span>
+                      )}
+                      {item.badge && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+
+                  {/* ── Info ── */}
+                  <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5 gap-1.5 sm:gap-2">
+                    {/* Name + Price */}
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                      <h3 className="font-sans font-bold text-xs sm:text-sm md:text-base text-[#F8FAFC] group-hover:text-[#A66DDB] transition-colors leading-snug flex-1">
+                        {isAr ? item.nameAr : item.name}
+                      </h3>
+                      <span
+                        className="font-sans font-black text-xs sm:text-sm md:text-base shrink-0"
+                        style={{
+                          background: 'linear-gradient(135deg, #72B4FF, #E91E8C)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                        }}
+                      >
+                        {item.price}
+                      </span>
+                    </div>
+
+                    {/* Description — hidden on mobile (shown in modal on tap) */}
+                    <p className="text-[10px] sm:text-[11px] md:text-xs text-[#64748B] font-light leading-relaxed flex-1 hidden sm:block">
+                      {isAr ? item.descriptionAr : item.description}
+                    </p>
+
+                    {/* Mobile tap hint */}
+                    <p className="text-[9px] text-[#A66DDB]/60 font-light sm:hidden mt-0.5">
+                      {isAr ? 'اضغط للتفاصيل' : 'Tap for details'}
+                    </p>
+                  </div>
+
+                  {/* Bottom gradient line */}
+                  <div
+                    className="h-px w-0 group-hover:w-full transition-all duration-500"
+                    style={{ background: 'linear-gradient(to right, #72B4FF, #E91E8C)' }}
+                  />
+                </motion.div>
+              ))}
+              
+              {(!menuItems[activeCategory] || menuItems[activeCategory].length === 0) && (
+                <div className="col-span-full py-16 text-center text-[#64748B] font-light">
+                  {isAr ? 'لا يوجد منتجات في هذا القسم حالياً.' : 'No products in this category yet.'}
+                </div>
+              )}
+            </motion.div>
           )}
         </div>
       </main>

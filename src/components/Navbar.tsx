@@ -152,8 +152,8 @@ export default function Navbar() {
             <div className="px-6 sm:px-10 md:px-16 pb-8 sm:pb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t border-[#1E2230] pt-6">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-widest text-[#F8FAFC]/30 font-medium">{t.nav.inquiries}</span>
-                <a href="mailto:hello@vegagaming.iq" className="text-sm sm:text-base font-light text-[#F8FAFC] hover:text-[#A66DDB] transition-colors">
-                  hello@vegagaming.iq
+                <a href="mailto:vegaarenastar@gmail.com" className="text-sm sm:text-base font-light text-[#F8FAFC] hover:text-[#A66DDB] transition-colors">
+                  vegaarenastar@gmail.com
                 </a>
               </div>
               <div className="flex gap-4 sm:gap-6 text-xs text-[#64748B]">

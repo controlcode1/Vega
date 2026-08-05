@@ -76,7 +76,7 @@ export const translations = {
       location: 'Location',
       locationVal: 'Baghdad, Iraq',
       hours: 'Hours',
-      hoursVal: 'Daily 10:00 AM – 2:00 AM',
+      hoursVal: 'Daily 8:00 AM – 4:00 AM',
     },
     // Footer
     footer: {
@@ -84,7 +84,7 @@ export const translations = {
       ctaHeadline1: 'SAY HELLO',
       ctaHeadline2: 'to the arena.',
       ctaHeadline3: 'VEGA.',
-      email: 'hello@vegagaming.iq',
+      email: 'vegaarenastar@gmail.com',
       navTitle: 'Navigation',
       connectTitle: 'Connect',
       hqTitle: 'Location',
@@ -159,7 +159,7 @@ export const translations = {
       location: 'الموقع',
       locationVal: 'بغداد، العراق',
       hours: 'أوقات العمل',
-      hoursVal: 'يومياً ١٠:٠٠ ص – ٢:٠٠ ص',
+      hoursVal: 'يومياً ٨:٠٠ ص – ٤:٠٠ ص',
     },
     // Footer
     footer: {
@@ -167,7 +167,7 @@ export const translations = {
       ctaHeadline1: 'قل مرحبا',
       ctaHeadline2: 'بالساحة.',
       ctaHeadline3: 'فيغا.',
-      email: 'hello@vegagaming.iq',
+      email: 'vegaarenastar@gmail.com',
       navTitle: 'التنقل',
       connectTitle: 'تابعنا',
       hqTitle: 'الموقع',
