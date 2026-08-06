@@ -5,14 +5,39 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShieldAlert, X } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import {
+  ShieldAlert,
+  X,
+  Coffee,
+  Zap,
+  Gamepad2,
+  ShoppingBag,
+  Sparkles,
+  Utensils,
+  CupSoda,
+  Flame,
+  Star,
+  Package,
+} from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Category, MenuItem } from '@/lib/db';
 
+// Specific icon mapping to avoid importing the entire 1000+ lucide icon library
+const ICON_MAP: Record<string, React.ElementType> = {
+  Coffee,
+  Zap,
+  Gamepad2,
+  ShoppingBag,
+  Sparkles,
+  Utensils,
+  CupSoda,
+  Flame,
+  Star,
+  Package,
+};
+
 const getIconComponent = (iconName: string) => {
-  const IconComponent = (LucideIcons as any)[iconName];
-  return IconComponent || LucideIcons.Coffee;
+  return ICON_MAP[iconName] || Coffee;
 };
 
 export default function MenuPage() {
@@ -21,15 +46,18 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const { lang, isAr } = useI18n();
+  const { isAr } = useI18n();
 
   useEffect(() => {
+    let isMounted = true;
     async function loadMenu() {
       try {
         const res = await fetch(`/api/menu?_t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch menu');
         const data = await res.json();
         
+        if (!isMounted) return;
+
         setCategories(data.categories || []);
         
         // Group items by categoryId (case-insensitive & trimmed matching)
@@ -49,11 +77,12 @@ export default function MenuPage() {
       } catch (err) {
         console.error('Error loading menu:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
     
     loadMenu();
+    return () => { isMounted = false; };
   }, []);
 
   // Close modal on Escape key
@@ -89,41 +118,37 @@ export default function MenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[999] flex items-center justify-center px-4"
-            style={{ background: 'rgba(7,7,8,0.85)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'rgba(7, 7, 8, 0.88)' }}
             onClick={closeModal}
           >
             <motion.div
               key="modal-card"
-              initial={{ opacity: 0, scale: 0.88, y: 24 }}
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 16 }}
-              transition={{
-                type: 'spring',
-                stiffness: 320,
-                damping: 28,
-                mass: 0.9,
-              }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-3xl overflow-hidden border border-[#1E2230]"
+              className="relative w-full max-w-sm rounded-3xl overflow-hidden border border-[#1E2230] shadow-2xl transform-gpu"
               style={{ background: 'linear-gradient(160deg, #0E0E12 0%, #12141C 100%)' }}
             >
               {/* Close Button */}
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center border border-[#1E2230] bg-[#0E0E12]/80 text-[#64748B] hover:text-white transition-colors"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
 
               {/* Image */}
-              <div className="relative w-full aspect-[4/3]">
+              <div className="relative w-full aspect-[4/3] bg-[#121217]">
                 <Image
                   src={selectedItem.image}
                   alt={isAr ? selectedItem.nameAr : selectedItem.name}
                   fill
-                  sizes="100vw"
+                  sizes="(max-width: 640px) 100vw, 400px"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-[#0E0E12]/20 to-transparent" />
@@ -185,9 +210,9 @@ export default function MenuPage() {
       </AnimatePresence>
 
       <main className="min-h-screen bg-[#070708] relative text-[#F8FAFC] overflow-hidden">
-        {/* Background glows */}
-        <div className="absolute top-[30vh] left-[-10vw] w-[600px] h-[600px] rounded-full bg-[#72B4FF]/5 blur-[150px] -z-10 pointer-events-none transform-gpu translate-z-0" />
-        <div className="absolute bottom-[20vh] right-[-10vw] w-[500px] h-[500px] rounded-full bg-[#E91E8C]/4 blur-[120px] -z-10 pointer-events-none transform-gpu translate-z-0" />
+        {/* Optimized GPU Background glows */}
+        <div className="absolute top-[30vh] left-[-10vw] w-[500px] h-[500px] rounded-full bg-[#72B4FF]/5 blur-[80px] -z-10 pointer-events-none transform-gpu" />
+        <div className="absolute bottom-[20vh] right-[-10vw] w-[400px] h-[400px] rounded-full bg-[#E91E8C]/4 blur-[80px] -z-10 pointer-events-none transform-gpu" />
 
         {/* ── Hero Cover ── */}
         <div className="relative w-full h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden border-b border-[#1E2230]">
@@ -196,15 +221,16 @@ export default function MenuPage() {
             alt="Vega Gaming Arena Menu"
             fill
             priority
-            className="object-cover object-top"
+            sizes="100vw"
+            className="object-cover object-top transform-gpu"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-[#070708]/50 to-transparent" />
 
           <div className="relative z-10 text-center px-6 max-w-3xl space-y-4">
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
+              transition={{ duration: 0.5 }}
               className="font-sans font-black tracking-tight"
               style={{ fontSize: 'clamp(2rem, 6vw, 5rem)' }}
             >
@@ -214,9 +240,9 @@ export default function MenuPage() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
               className="text-sm text-[#F8FAFC] font-light max-w-md mx-auto drop-shadow-md"
             >
               {isAr
@@ -235,17 +261,17 @@ export default function MenuPage() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold uppercase tracking-widest border transition-all duration-300 cursor-pointer ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold uppercase tracking-widest border transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'text-white border-transparent shadow-lg scale-105'
-                        : 'bg-[#0E0E12]/70 text-[#64748B] border-[#1E2230] hover:text-[#F8FAFC] hover:bg-[#12141C]/50'
+                        : 'bg-[#0E0E12]/80 text-[#64748B] border-[#1E2230] hover:text-[#F8FAFC] hover:bg-[#12141C]/50'
                     }`}
                     style={isActive ? {
                       background: 'linear-gradient(135deg, #72B4FF, #A66DDB, #E91E8C)',
                       boxShadow: '0 4px 20px rgba(166,109,219,0.35)'
                     } : {}}
                   >
-                    <IconComponent className="w-3.5 h-3.5" />
+                    <IconComponent className="w-3.5 h-3.5 shrink-0" />
                     {getCatName(cat)}
                   </button>
                 );
@@ -285,18 +311,15 @@ export default function MenuPage() {
           ) : (
             <motion.div
               key={activeCategory}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
               className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6"
             >
-              {menuItems[activeCategory]?.map((item, idx) => (
-                <motion.div
+              {menuItems[activeCategory]?.map((item) => (
+                <div
                   key={item.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.07 }}
-                  className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_40px_rgba(166,109,219,0.12)] transform-gpu cursor-pointer active:scale-[0.97]"
+                  className="group flex flex-col rounded-2xl bg-[#0E0E12] border border-[#1E2230] hover:border-[#A66DDB]/40 transition-all duration-200 overflow-hidden shadow-lg hover:shadow-[0_8px_30px_rgba(166,109,219,0.12)] transform-gpu cursor-pointer active:scale-[0.98]"
                   onClick={() => setSelectedItem(item)}
                 >
                   {/* ── Image ── */}
@@ -306,7 +329,8 @@ export default function MenuPage() {
                       alt={isAr ? item.nameAr : item.name}
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105 transform-gpu"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 transform-gpu"
+                      loading="lazy"
                     />
                     {/* Gradient overlay at bottom */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-60" />
@@ -360,10 +384,10 @@ export default function MenuPage() {
 
                   {/* Bottom gradient line */}
                   <div
-                    className="h-px w-0 group-hover:w-full transition-all duration-500"
+                    className="h-px w-0 group-hover:w-full transition-all duration-300"
                     style={{ background: 'linear-gradient(to right, #72B4FF, #E91E8C)' }}
                   />
-                </motion.div>
+                </div>
               ))}
               
               {(!menuItems[activeCategory] || menuItems[activeCategory].length === 0) && (

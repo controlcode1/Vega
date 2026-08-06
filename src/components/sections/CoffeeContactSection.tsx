@@ -28,12 +28,13 @@ export default function CoffeeContactSection() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to send.');
+        const detailStr = data.details?.message ? ` (${data.details.message})` : '';
+        throw new Error((data.error || 'Failed to send.') + detailStr);
       }
 
       setIsSubmitted(true);
     } catch (err: any) {
-      setError(isAr ? 'حدث خطأ أثناء الإرسال. حاول مجدداً.' : 'Something went wrong. Please try again.');
+      setError(err.message || (isAr ? 'حدث خطأ أثناء الإرسال. حاول مجدداً.' : 'Something went wrong. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
