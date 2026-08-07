@@ -50,6 +50,7 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'feedback'>('products');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
 
   // Feedback State
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
@@ -403,6 +404,11 @@ export default function AdminPage() {
       alert('Network error');
     }
   };
+
+  // Filtered items based on selected category
+  const filteredItems = selectedCategoryFilter
+    ? items.filter(item => item.categoryId === selectedCategoryFilter)
+    : items;
 
   // Safe Lucide icon rendering
   const renderIcon = (iconName: string) => {
@@ -840,17 +846,67 @@ export default function AdminPage() {
                             {isAr ? 'المنتجات الحالية' : 'Current Menu Products'}
                           </h2>
                           <span className="text-[10px] font-semibold bg-[#12141C] text-[#A66DDB] px-3 py-1 rounded-full border border-[#1E2230]">
-                            {items.length} {isAr ? 'منتج' : 'Products'}
+                            {filteredItems.length}{selectedCategoryFilter ? '' : ''} {isAr ? 'منتج' : 'Products'}
                           </span>
                         </div>
 
-                        {items.length === 0 ? (
+                        {/* ── Category Filter Bar ── */}
+                        {categories.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pb-1">
+                            {/* All button */}
+                            <button
+                              onClick={() => setSelectedCategoryFilter(null)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
+                                selectedCategoryFilter === null
+                                  ? 'bg-[#A66DDB]/20 border-[#A66DDB] text-[#F8FAFC] shadow-[0_0_12px_rgba(166,109,219,0.3)]'
+                                  : 'bg-[#0E0E12] border-[#1E2230] text-[#64748B] hover:border-[#A66DDB]/40 hover:text-[#F8FAFC]'
+                              }`}
+                            >
+                              <Package className="w-3 h-3" />
+                              {isAr ? 'الكل' : 'All'}
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
+                                selectedCategoryFilter === null ? 'bg-[#A66DDB] text-white' : 'bg-[#1E2230] text-[#64748B]'
+                              }`}>
+                                {items.length}
+                              </span>
+                            </button>
+
+                            {/* Per-category buttons */}
+                            {categories.map((cat) => {
+                              const count = items.filter(i => i.categoryId === cat.id).length;
+                              const isActive = selectedCategoryFilter === cat.id;
+                              return (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => setSelectedCategoryFilter(cat.id)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
+                                    isActive
+                                      ? 'bg-[#72B4FF]/20 border-[#72B4FF] text-[#F8FAFC] shadow-[0_0_12px_rgba(114,180,255,0.25)]'
+                                      : 'bg-[#0E0E12] border-[#1E2230] text-[#64748B] hover:border-[#72B4FF]/40 hover:text-[#F8FAFC]'
+                                  }`}
+                                >
+                                  {renderIcon(cat.icon)}
+                                  {isAr ? cat.nameAr : cat.nameEn}
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
+                                    isActive ? 'bg-[#72B4FF] text-white' : 'bg-[#1E2230] text-[#64748B]'
+                                  }`}>
+                                    {count}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {filteredItems.length === 0 ? (
                           <div className="text-center py-20 bg-[#0E0E12]/40 rounded-2xl border border-[#1E2230] text-[#64748B] font-light">
-                            {isAr ? 'لا يوجد منتجات في القائمة حالياً.' : 'No products found on the menu.'}
+                            {selectedCategoryFilter
+                              ? (isAr ? 'لا يوجد منتجات في هذا القسم.' : 'No products in this category.')
+                              : (isAr ? 'لا يوجد منتجات في القائمة حالياً.' : 'No products found on the menu.')}
                           </div>
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {items.map((item) => {
+                            {filteredItems.map((item) => {
                               const itemCat = categories.find(c => c.id === item.categoryId);
                               const isEditingThis = editingProductId === item.id;
                               return (
@@ -891,7 +947,7 @@ export default function AdminPage() {
                                         {itemCat ? (isAr ? itemCat.nameAr : itemCat.nameEn) : 'Unknown'}
                                       </span>
                                       
-                              {item.badge && (
+                                      {item.badge && (
                                         <span className="text-[8px] uppercase tracking-wider text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded border border-[#E91E8C]/15">
                                           {item.badge}
                                         </span>
