@@ -27,7 +27,7 @@ export default function Footer() {
       className="relative w-full pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-10 text-[#F8FAFC] border-t border-white/10 overflow-hidden transform-gpu"
     >
       <div className="w-full max-w-7xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 relative z-10 rounded-2xl transform-gpu"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(7,7,8,0.72) 0%, rgba(7,7,8,0.45) 60%, rgba(7,7,8,0.0) 100%)', backdropFilter: 'blur(2px)' }}
+        style={{ background: 'radial-gradient(ellipse at center, rgba(7,7,8,0.85) 0%, rgba(7,7,8,0.5) 60%, rgba(7,7,8,0.0) 100%)' }}
       >
 
         {/* CTA block */}

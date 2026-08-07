@@ -10,6 +10,10 @@ export default function CustomCursor() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Skip custom cursor tracking and DOM mutation listening on mobile / touch devices
+    const isHoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!isHoverCapable) return;
+
     const cursor = cursorRef.current;
     const ring = ringRef.current;
     if (!cursor || !ring) return;

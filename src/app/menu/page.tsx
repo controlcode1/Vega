@@ -211,8 +211,8 @@ export default function MenuPage() {
 
       <main className="min-h-screen bg-[#070708] relative text-[#F8FAFC] overflow-hidden">
         {/* Optimized GPU Background glows */}
-        <div className="absolute top-[30vh] left-[-10vw] w-[500px] h-[500px] rounded-full bg-[#72B4FF]/5 blur-[80px] -z-10 pointer-events-none transform-gpu" />
-        <div className="absolute bottom-[20vh] right-[-10vw] w-[400px] h-[400px] rounded-full bg-[#E91E8C]/4 blur-[80px] -z-10 pointer-events-none transform-gpu" />
+        <div className="absolute top-[30vh] left-[-10vw] w-[280px] sm:w-[500px] h-[280px] sm:h-[500px] rounded-full bg-[#72B4FF]/5 blur-[30px] sm:blur-[80px] -z-10 pointer-events-none transform-gpu" />
+        <div className="absolute bottom-[20vh] right-[-10vw] w-[240px] sm:w-[400px] h-[240px] sm:h-[400px] rounded-full bg-[#E91E8C]/4 blur-[30px] sm:blur-[80px] -z-10 pointer-events-none transform-gpu" />
 
         {/* ── Hero Cover ── */}
         <div className="relative w-full h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden border-b border-[#1E2230]">

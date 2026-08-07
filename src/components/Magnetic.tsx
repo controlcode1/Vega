@@ -13,6 +13,11 @@ export default function Magnetic({ children, className = '', strength = 0.35 }: 
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Disable magnetic tracking on mobile / touch devices to eliminate layout thrashing
+    if (typeof window === 'undefined') return;
+    const isHoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!isHoverCapable) return;
+
     const element = ref.current;
     if (!element) return;
 
