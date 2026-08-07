@@ -18,6 +18,9 @@ import {
   Flame,
   Star,
   Package,
+  GlassWater,
+  Pizza,
+  Cookie,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Category, MenuItem } from '@/lib/db';
@@ -34,6 +37,9 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Flame,
   Star,
   Package,
+  GlassWater,
+  Pizza,
+  Cookie,
 };
 
 const getIconComponent = (iconName: string) => {
