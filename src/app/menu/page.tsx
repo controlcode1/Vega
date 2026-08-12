@@ -199,7 +199,7 @@ export default function MenuPage() {
 
                 {/* Description */}
                 {(isAr ? selectedItem.descriptionAr : selectedItem.description) && (
-                  <p className="text-sm text-[#94A3B8] font-light leading-relaxed">
+                  <p className="text-sm text-[#F8FAFC] font-semibold leading-relaxed">
                     {isAr ? selectedItem.descriptionAr : selectedItem.description}
                   </p>
                 )}
@@ -249,7 +249,7 @@ export default function MenuPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-sm text-[#F8FAFC] font-light max-w-md mx-auto drop-shadow-md"
+              className="text-sm text-[#F8FAFC] font-semibold max-w-md mx-auto drop-shadow-md"
             >
               {isAr
                 ? 'مشروبات وأكلات مصممة لأعلى مستويات الأداء في ساحة فيغا'
@@ -378,7 +378,7 @@ export default function MenuPage() {
                     </div>
 
                     {/* Description — hidden on mobile (shown in modal on tap) */}
-                    <p className="text-[10px] sm:text-[11px] md:text-xs text-[#64748B] font-light leading-relaxed flex-1 hidden sm:block">
+                    <p className="text-[10px] sm:text-[11px] md:text-xs text-[#F8FAFC] font-semibold leading-relaxed flex-1 hidden sm:block">
                       {isAr ? item.descriptionAr : item.description}
                     </p>
 
