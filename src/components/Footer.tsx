@@ -77,12 +77,22 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
             <div className="flex flex-col leading-none">
               <span className="font-sans font-black text-xl vega-gradient tracking-widest">VEGA</span>
-              <span className="text-[8px] tracking-[0.25em] text-[#F8FAFC]/30 uppercase -mt-0.5">Gaming Arena</span>
+              <span className="text-[8px] tracking-[0.25em] text-[#F8FAFC]/30 uppercase -mt-0.5">Gaming Centre</span>
             </div>
             <p className="text-[10px] sm:text-[11px] text-[#F8FAFC]/80 max-w-[200px] leading-relaxed font-light">
-              {isAr
-                ? 'ساحة ألعاب متميزة تجمع أفضل الأجهزة والمشروبات المتخصصة في الرياض.'
-                : 'Premium gaming arena with high-end rigs, specialty drinks, and esports events in Baghdad.'}
+              {isAr ? (
+                <>
+                  أنت النجم القادم<br />
+                  Elite {'&'} VIP Gaming PCs، بلياردو، سينما، PS5<br />
+                  الكرادة - ساحة كهرمانة
+                </>
+              ) : (
+                <>
+                  You&apos;re the next star<br />
+                  Elite {'&'} VIP Gaming PCs, Billiards, Cinema, PS5<br />
+                  Karrada - Kahramana Square
+                </>
+              )}
             </p>
           </div>
 
